@@ -1,6 +1,7 @@
 # Day 6: Cambodia, Cardamom National Park
 # Date: 5 November, 2023
 
+# packages
 library(tidyverse)
 library(sf)
 library(rnaturalearth)
@@ -23,7 +24,9 @@ ggplot() +
   geom_sf(data = cambodia,
           fill = "green")
 
+
 # get national protected areas
+# Shapefile from here: https://data.opendevelopmentcambodia.net/dataset/natural-protected-areas-and-biodiversity-conservation-corridor-2019
 protected_areas <- st_read(here("data",
                                "npa_bci",
                                "npa_bci.shp"),
