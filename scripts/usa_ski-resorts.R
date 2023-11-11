@@ -161,7 +161,7 @@ alaska_map <- ggplot() +
 library(cowplot)
 combined_map <- ggdraw(main) +
   draw_plot(alaska_map, 
-            x = 0.03, y = -0.13, 
+            x = 0.03, y = -0.16, 
             width =0.23, height = 0.9)
 
 combined_map + 
@@ -170,4 +170,4 @@ combined_map +
 
 
 ggsave(here::here("plots", "usa_ski-resorts.png"),
-       height = 7, width = 7, dpi = 320)
+       height = 5.75, width = 6.9, dpi = 320)
