@@ -37,7 +37,7 @@ brazil <- brazil |>
 
 # Get brazil data
 # turns out you need a registered email
-# galah_config(email = "your-email-here", atlas = "brazil")
+galah_config(email = "your-email-here", atlas = "brazil")
 
 counts <- galah_call() |>
   identify("aves") |>
@@ -49,8 +49,8 @@ counts <- galah_call() |>
 # setdiff(counts$cl10386, ecoregions$nome)
 setdiff(states$nome, counts$cl10386)
 
-ecoregions |>
-  filter(str_detect(nome, "Pi"))
+# ecoregions |>
+#   filter(str_detect(nome, "Pi"))
 
 counts <- counts |>
   mutate(cl10386 = case_when(
@@ -83,6 +83,12 @@ state_counts_km <- state_counts |>
 
 # make galah palette
 # Colours inspired by this bird: https://en.wikipedia.org/wiki/Hoatzin
+hoatzin <- colorRampPalette(c(
+  "#39393b",
+  "#7E2D06",
+  "#f5ca60"
+  ))(5) 
+
 
 library(showtext)
 # add font
@@ -130,10 +136,9 @@ ggplot() +
     plot.caption = ggtext::element_markdown(family = font, hjust = 0.5, colour = "#7e2d06", size = 10),
     legend.title = ggtext::element_markdown(hjust = 0.5),
     plot.background = element_rect(fill = "white", colour = "white"),
-    # panel.background = element_rect(fill = "#EDF6CB", colour = "#EDF6CB"),
     plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), "cm")
   )
 
 
 showtext_opts(dpi = 320) # Fixes text for saving in 320 dpi
-ggsave(here("plots", "brazil_green.png"), height = 7, width = 7, dpi = 320)
+ggsave(here("plots", "brazil.png"), height = 7, width = 7, dpi = 320)
