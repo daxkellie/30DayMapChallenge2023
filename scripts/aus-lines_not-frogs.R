@@ -1,6 +1,11 @@
 # Day 2: Lines (but actually, Day 4: Bad map)
 # Title: Frogs? (in the end, no, just lines)
 
+# NOTE: This is an incredibly innefficient way to get to the final 
+# dataviz. The uniqueness of line-length is, I think, from the variation 
+# in frog observation locations. However, I downloaded A LOT of data for it 
+# to, in the end, be flattened into a line. The same could be achieved by 
+# using less data but equally varied across Australia.
 
 # remotes::install_github("AtlasOfLivingAustralia/galah@dev-version-2-0-mw")
 library(galah)
@@ -127,7 +132,7 @@ showtext_auto()
 showtext_opts(dpi = 320)
 
 
-# Map (but it is really just a fancy way to make flight lines lol)
+# Map (but it is really just a fancy way to make lines lol)
 ggplot() +
   geom_density_ridges(data = frog_coords,
                       aes(x = longitude,
