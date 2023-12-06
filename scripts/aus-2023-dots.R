@@ -1,3 +1,6 @@
+# ------------------------------------------------------------------------- #
+# 2023 Atlas of Living Australia observations in dots (Jacques Bertin map)
+
 
 # packages
 library(galah)
@@ -14,15 +17,10 @@ library(tidyterra)
 library(tictoc)
 library(beepr)
 
-# frog counts
-galah_call() |>
-  filter(year == 1970) |>
-  atlas_counts()
-
 
 
 # get australia map
-aus <- ozmap_country |>
+aus <- ozmap_states |>
   st_transform(crs = st_crs(4326))
 
 # create grid
@@ -48,7 +46,9 @@ oz_grid_tibble <- oz_grid |>
   as_tibble() |>
   mutate(id = row_number())
 
-# get frog counts for each square in the grid
+
+
+# Download all observations in the ALA in 2023
 
 # set email
 galah_config(email = "dax.kellie@csiro.au")
@@ -56,16 +56,13 @@ galah_config(email = "dax.kellie@csiro.au")
 # function to send a query for each polygon and return counts of frogs
 get_counts <- function(polygon){
   
-  frog_taxa <- search_taxa(tibble(order = "anura", 
-                                  class = "amphibia"))
-  
   # convert to wkt
   wkt_string <- st_as_text(oz_grid[[polygon]])
   
   # get counts
   result <- galah_call() |>
     galah_geolocate(wkt_string) |>
-    galah_filter(year == 1970,
+    galah_filter(year == 2023,
                  decimalLongitude > 110) |>
     atlas_counts(limit = NULL)
   
@@ -93,6 +90,10 @@ counts_joined <- oz_grid_tibble |>
   left_join(counts_df, join_by(id == id))
 
 
+
+
+# Extract centre points from grid
+
 # extract centre
 counts_centre <- counts_joined |> 
   mutate(centre = st_centroid(geometry))
@@ -110,38 +111,73 @@ ggplot(obs_coords)+
 
 
 # subset to grid cells that are within land
-keep_hexes <- st_intersection(obs_coords$geometry, aus)
+keep_hexes <- st_intersects(obs_coords$geometry, aus)
 keep_hexes <- keep_hexes |> 
   as.data.frame() |> 
   pull(row.id)
 point_grid <- obs_coords |>
   filter(id %in% keep_hexes)
 
-# Keep only points inside metropolitan France
+# Edit points for legend
 point_grid <- point_grid |>
-  mutate(dens=case_when(
-    count<0.01~"A",
-    count<~0.1~"B",
-    count<1~"C",
-    count<10~"D",
-    count<100~"E",
-    TRUE~"F"
+  mutate(dens = case_when(
+    count < 1 ~ "A",
+    count >= 1 & count < 10 ~ "B",
+    count >= 10 & count < 100 ~ "C",
+    count >= 100 & count < 1000  ~ "D",
+    count >= 1000 & count < 10000 ~ "E",
+    count >= 10000 & count < 100000 ~ "F",
+    count >= 100000 ~ "G",
+    TRUE ~ "H"
   ))
 
-# map
+point_grid |>
+  group_by(dens) |>
+  count()
+
+# palette
+dot_palette <- colorRampPalette(c(
+  "#895C81",
+  "#DE4BC3"
+))(7) 
+
+
+
+
+## Map
+
 ggplot() +
   geom_sf(
-    data= point_grid,
-    mapping= aes(size = dens, 
-                 geometry = geometry),
-    colour = pilot::pilot_color("brown")
-  ) +
-  geom_sf(
     data = aus,
-    colour = "grey60",
+    colour = "grey80",
     fill = NA
   ) + 
+  geom_sf(
+    data= point_grid,
+    mapping= aes(size = dens,
+                 # color = dens,
+                 fill = dens,
+                 geometry = geometry),
+    shape = 21,
+    color = "grey90"
+  ) +
   scale_size_manual(
-    values = c(0.5,1,1.5,2,2.5, 3),
-    label=c("<20 inhabitants","20 to 69","70 to 139","140 to 199","≥200 inhabitants")
+    values = c(1, 2, 3, 3, 4, 5, 6),
+    label = c("< 1 observation", "1 to 9", "10 to 99", 
+              "100 to 999", "1,000 to 9,999", "10,000 to 999,000", 
+              "≥ 100,000 observations")
+  ) + 
+  scale_fill_manual(
+    values = dot_palette) +
+  coord_sf(xlim = c(110, 155), 
+           ylim = c(-45, -10)) +
+  guides(size = guide_legend(title = "Observations"),
+         color = guide_legend(title = "Observations")) +
+  theme_void() + 
+  theme(
+    legend.position = "none"
   )
+
+# save
+ggsave(here::here("plots", "aus_2023_observations.svg"),
+       height = 10, width = 10, unit = "in", dpi = 320)
