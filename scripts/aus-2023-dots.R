@@ -1,6 +1,9 @@
 # ------------------------------------------------------------------------- #
 # 2023 Atlas of Living Australia observations in dots (Jacques Bertin map)
 
+# Dataviz was almost entirely thanks to this tutorial by Ben Nowak
+# https://r-graph-gallery.com/web-valued-dots-map-bertin.html
+# ------------------------------------------------------------------------- #
 
 # packages
 library(galah)
@@ -12,7 +15,6 @@ library(sf)
 library(showtext)
 library(terra)
 library(tidyterra)
-
 
 library(tictoc)
 library(beepr)
@@ -41,7 +43,7 @@ ggplot() +
   geom_sf(data = oz_grid)
 
 
-# convert aus square grid to 
+# convert aus square grid to tibble
 oz_grid_tibble <- oz_grid |> 
   as_tibble() |>
   mutate(id = row_number())
@@ -53,7 +55,7 @@ oz_grid_tibble <- oz_grid |>
 # set email
 galah_config(email = "dax.kellie@csiro.au")
 
-# function to send a query for each polygon and return counts of frogs
+# function to send a query for each polygon and return observation counts
 get_counts <- function(polygon){
   
   # convert to wkt
@@ -75,7 +77,7 @@ get_counts <- function(polygon){
   }
 }
 
-# download number of species for each polygon
+# download number of observations for each polygon
 tic()
 counts_list <- map(seq_along(oz_grid_tibble$geometry), get_counts)
 toc(); beepr::beep(2)
